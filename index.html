@@ -1762,7 +1762,69 @@
 
             // 4. CONFIRM SUBMIT
             window.confirmSubmitReport = () => {
-                document.getElementById('confirm-submit-modal').classList.remove('hidden');
+                if (!window.currentReportData) {
+                    showModal('Error', '<p>Data not loaded yet.</p>', 'OK', hideModal, true);
+                    return;
+                }
+
+                const status = window.currentReportData.status;
+                const modal = document.getElementById('confirm-submit-modal');
+                const title = modal.querySelector('h3');
+                const body = modal.querySelector('p');
+                const confirmBtn = modal.querySelector('button:last-child'); // The "Yes" button
+                const headerBg = modal.querySelector('div:first-child'); // The colored header div
+                const icon = headerBg.querySelector('i');
+
+                // 1. ERROR: Inputs not updated today
+                if (!status || !status.inputsUpdatedToday) {
+                    // Show Error Modal style
+                    headerBg.className = "bg-red-600 p-4 flex justify-center";
+                    icon.setAttribute('data-lucide', 'alert-octagon');
+                    title.textContent = "Cannot Submit Yet";
+                    title.className = "text-xl font-bold text-red-600 mb-2";
+                    body.innerHTML = `
+                        You have not updated the daily inputs for <b>TODAY</b> yet.<br><br>
+                        Please enter BUO, MOD, Timpla, & Tira and click <b>"Update Record"</b> first.
+                    `;
+                    // Hide the "Yes" button, only show Cancel/Close
+                    confirmBtn.classList.add('hidden');
+                    modal.querySelector('button:first-child').textContent = "Close";
+                } 
+                // 2. WARNING: Report already exists (Overwrite)
+                else if (status.reportAlreadySubmitted) {
+                    // Show Warning Modal style
+                    headerBg.className = "bg-orange-500 p-4 flex justify-center";
+                    icon.setAttribute('data-lucide', 'alert-triangle');
+                    title.textContent = "Report Already Exists";
+                    title.className = "text-xl font-bold text-orange-600 mb-2";
+                    body.innerHTML = `
+                        A report for today has already been submitted.<br><br>
+                        Do you want to <b>OVERWRITE</b> the previous submission with this new data?
+                    `;
+                    confirmBtn.classList.remove('hidden');
+                    confirmBtn.className = "px-5 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg transition-colors flex items-center";
+                    confirmBtn.textContent = "Yes, Overwrite";
+                    modal.querySelector('button:first-child').textContent = "Cancel";
+                } 
+                // 3. NORMAL: Standard Submission
+                else {
+                    // Show Success/Green Modal style
+                    headerBg.className = "bg-green-600 p-4 flex justify-center";
+                    icon.setAttribute('data-lucide', 'send');
+                    title.textContent = "Submit Final Report?";
+                    title.className = "text-xl font-bold text-gray-900 mb-2";
+                    body.innerHTML = `
+                        This will archive all sales, expenses, and inventory data for the day.<br><br>
+                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Inputs Verified</span>
+                    `;
+                    confirmBtn.classList.remove('hidden');
+                    confirmBtn.className = "px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg transition-colors flex items-center";
+                    confirmBtn.textContent = "Yes, Submit";
+                    modal.querySelector('button:first-child').textContent = "Cancel";
+                }
+
+                lucide.createIcons();
+                modal.classList.remove('hidden');
             };
 
             // 5. EXECUTE SUBMIT (Reverted to Fullname)
@@ -2400,8 +2462,3 @@
 </body>
 
 </html>
-
-
-
-
-
