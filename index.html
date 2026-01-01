@@ -1761,10 +1761,11 @@
             };
 
             // 4. CONFIRM SUBMIT
+            // --- UPDATED CONFIRMATION MODAL LOGIC ---
             window.confirmSubmitReport = () => {
                 // 1. Safety Check
                 if (!window.currentReportData) {
-                    showModal('Loading...', '<p class="text-center text-gray-500">Please wait, data is syncing...</p>', 'OK', hideModal, true);
+                    showModal('Loading...', '<p class="text-gray-500">Syncing data...</p>', 'OK', hideModal, true);
                     return;
                 }
 
@@ -1773,86 +1774,78 @@
                 const title = modal.querySelector('h3');
                 const body = modal.querySelector('p');
                 const confirmBtn = modal.querySelector('button:last-child'); // The "Yes" button
-                const cancelBtn = modal.querySelector('button:first-child');
+                const cancelBtn = modal.querySelector('button:first-child'); // The "Cancel" button
                 
-                // Target the header containers
+                // Target the header containers (assuming structure matches confirm-update-modal)
                 const headerBg = modal.querySelector('div:first-child'); 
                 const iconContainer = headerBg.querySelector('div'); 
 
                 let iconName = 'send';
-                let btnClass = "";
                 let headerClass = "";
+                let confirmBtnClass = "";
 
                 // --- STATE A: ERROR (Inputs not updated today) ---
                 if (!status || !status.inputsUpdatedToday) {
-                    headerClass = "bg-red-500 p-6 flex justify-center items-center";
+                    headerClass = "bg-red-600 p-4 flex justify-center";
                     iconName = 'alert-octagon';
                     
-                    title.textContent = "Action Required";
-                    title.className = "text-xl font-bold text-red-600 mb-2 mt-4";
-                    body.innerHTML = `
-                        <div class="text-gray-600 mb-4">You cannot submit the report yet.</div>
-                        <div class="bg-red-50 text-red-800 text-sm p-3 rounded-lg border border-red-100 font-medium">
-                            The "Daily Inputs" (BUO, Timpla, Tira) have not been updated for <b>TODAY</b>.
-                        </div>
-                    `;
+                    title.textContent = "Cannot Submit Yet";
+                    // Clean Black/Gray Text
+                    title.className = "text-xl font-bold text-gray-900 mb-2";
+                    body.className = "text-sm text-gray-500 mb-6";
+                    body.innerHTML = `Daily inputs (BUO, Timpla, Tira) have NOT been updated for <b>TODAY</b> yet.<br>Please update the record first.`;
+                    
                     confirmBtn.classList.add('hidden'); // Hide "Yes"
                     cancelBtn.textContent = "Close";
-                    cancelBtn.className = "w-full py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition-colors";
+                    cancelBtn.className = "px-5 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-100 transition-colors w-full";
                 } 
                 // --- STATE B: WARNING (Report exists -> Overwrite) ---
                 else if (status.reportAlreadySubmitted) {
-                    headerClass = "bg-orange-500 p-6 flex justify-center items-center";
+                    headerClass = "bg-orange-500 p-4 flex justify-center";
                     iconName = 'alert-triangle';
                     
                     title.textContent = "Overwrite Existing Report?";
-                    title.className = "text-xl font-bold text-orange-700 mb-2 mt-4";
-                    body.innerHTML = `
-                        <div class="text-gray-600 mb-4">A report for <b>today</b> has already been archived.</div>
-                        <div class="bg-orange-50 text-orange-800 text-sm p-3 rounded-lg border border-orange-100 text-left">
-                            <ul class="list-disc pl-4 space-y-1">
-                                <li>The previous record will be deleted.</li>
-                                <li>New data will replace the old entry.</li>
-                            </ul>
-                        </div>
-                    `;
+                    title.className = "text-xl font-bold text-gray-900 mb-2";
+                    body.className = "text-sm text-gray-500 mb-6";
+                    body.innerHTML = `A report for today already exists.<br>Do you want to <b>overwrite</b> it with this new data?`;
+                    
                     confirmBtn.classList.remove('hidden');
                     confirmBtn.textContent = "Yes, Overwrite";
-                    confirmBtn.className = "flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-md transition-colors ml-2";
+                    // Orange Button
+                    confirmBtn.className = "px-5 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg transition-colors flex items-center";
+                    
                     cancelBtn.textContent = "Cancel";
-                    cancelBtn.className = "flex-1 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition-colors mr-2";
+                    cancelBtn.className = "px-5 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-100 transition-colors";
                 } 
                 // --- STATE C: NORMAL (Standard Submit) ---
                 else {
-                    headerClass = "bg-blue-600 p-6 flex justify-center items-center";
-                    iconName = 'send'; // Standard clean send icon
+                    headerClass = "bg-green-600 p-4 flex justify-center";
+                    iconName = 'send'; 
                     
-                    title.textContent = "Submit Daily Report";
-                    title.className = "text-xl font-bold text-gray-900 mb-2 mt-4";
-                    body.innerHTML = `
-                        <p class="text-gray-500 mb-4">Are you sure you want to close the day?</p>
-                        <div class="flex items-center justify-center space-x-4 text-sm bg-blue-50 p-3 rounded-lg border border-blue-100">
-                            <span class="flex items-center text-blue-700 font-bold"><i data-lucide="check" class="w-4 h-4 mr-1"></i> Inputs Verified</span>
-                            <span class="flex items-center text-blue-700 font-bold"><i data-lucide="check" class="w-4 h-4 mr-1"></i> Sales Synced</span>
-                        </div>
-                    `;
+                    title.textContent = "Submit Final Report?";
+                    title.className = "text-xl font-bold text-gray-900 mb-2";
+                    body.className = "text-sm text-gray-500 mb-6";
+                    body.innerHTML = `Are you sure you want to close the day? This will archive all sales and inventory data.`;
+                    
                     confirmBtn.classList.remove('hidden');
-                    confirmBtn.textContent = "Confirm Submit";
-                    confirmBtn.className = "flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md transition-colors ml-2";
+                    confirmBtn.textContent = "Yes, Submit";
+                    // Green Button
+                    confirmBtn.className = "px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg transition-colors flex items-center";
+                    
                     cancelBtn.textContent = "Cancel";
-                    cancelBtn.className = "flex-1 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition-colors mr-2";
+                    cancelBtn.className = "px-5 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-100 transition-colors";
                 }
 
-                // Apply Styles
+                // Apply Header Styles & Icon
                 headerBg.className = headerClass;
-                iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-10 h-10 text-white"></i>`;
+                iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-8 h-8 text-white"></i>`;
                 lucide.createIcons();
                 
                 // Show Modal
                 modal.classList.remove('hidden');
             };
 
-            // 5. EXECUTE SUBMIT (Reverted to Fullname)
+            //5. --- UPDATED SUBMISSION HANDLER WITH SUCCESS CONFIRMATION ---
             window.executeSubmitReport = () => {
                 const modal = document.getElementById('confirm-submit-modal');
                 const btn = modal.querySelector('button:last-child');
@@ -1860,7 +1853,7 @@
                 
                 // 1. Loading State
                 btn.disabled = true;
-                btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto"></i>`;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>`;
                 lucide.createIcons();
 
                 if (!window.currentReportData) return;
@@ -1893,21 +1886,20 @@
                     btn.textContent = origText;
 
                     if(res.success) {
-                        // 3. SHOW SUCCESS CONFIRMATION MODAL
+                        // 3. SHOW SUCCESS MODAL (Reusing generic modal for consistency)
                         showModal(
-                            'Report Saved!', 
-                            `<div class="flex flex-col items-center">
-                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                                    <i data-lucide="check" class="w-8 h-8 text-green-600"></i>
+                            'Report Saved', 
+                            `<div class="flex flex-col items-center py-4">
+                                <div class="p-3 bg-green-100 rounded-full mb-4">
+                                    <i data-lucide="check-check" class="w-8 h-8 text-green-600"></i>
                                 </div>
-                                <p class="text-gray-600 text-center">${res.message}</p>
-                                <p class="text-xs text-gray-400 mt-2">Data archived to database.</p>
+                                <p class="text-gray-800 font-bold text-lg mb-1">${res.message}</p>
+                                <p class="text-gray-500 text-sm">Data has been successfully archived.</p>
                              </div>`, 
                             'Done', 
                             () => {
                                 hideModal();
-                                // Refresh to update "Already Submitted" status
-                                loadReportData(); 
+                                loadReportData(); // Refresh data to update "Already Submitted" status
                             }, 
                             true // Hide cancel button
                         );
@@ -2519,5 +2511,6 @@
 </body>
 
 </html>
+
 
 
