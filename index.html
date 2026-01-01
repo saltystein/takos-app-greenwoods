@@ -1762,9 +1762,9 @@
 
             // 4. CONFIRM SUBMIT
             window.confirmSubmitReport = () => {
-                // 1. Safety Check: Data loaded?
+                // 1. Safety Check
                 if (!window.currentReportData) {
-                    showModal('Error', '<p>Data not loaded yet. Please wait a moment.</p>', 'OK', hideModal, true);
+                    showModal('Loading...', '<p class="text-center text-gray-500">Please wait, data is syncing...</p>', 'OK', hideModal, true);
                     return;
                 }
 
@@ -1773,83 +1773,103 @@
                 const title = modal.querySelector('h3');
                 const body = modal.querySelector('p');
                 const confirmBtn = modal.querySelector('button:last-child'); // The "Yes" button
+                const cancelBtn = modal.querySelector('button:first-child');
                 
-                // TARGETING FIX:
-                // Instead of finding 'i' (which might be an svg now), we target the containers
+                // Target the header containers
                 const headerBg = modal.querySelector('div:first-child'); 
-                const iconContainer = headerBg.querySelector('div'); // The inner circle div
+                const iconContainer = headerBg.querySelector('div'); 
 
-                // 2. LOGIC: Determine State
                 let iconName = 'send';
-                
-                // STATE A: ERROR (Inputs not updated)
+                let btnClass = "";
+                let headerClass = "";
+
+                // --- STATE A: ERROR (Inputs not updated today) ---
                 if (!status || !status.inputsUpdatedToday) {
-                    headerBg.className = "bg-red-600 p-4 flex justify-center";
+                    headerClass = "bg-red-500 p-6 flex justify-center items-center";
                     iconName = 'alert-octagon';
                     
-                    title.textContent = "Cannot Submit Yet";
-                    title.className = "text-xl font-bold text-red-600 mb-2";
+                    title.textContent = "Action Required";
+                    title.className = "text-xl font-bold text-red-600 mb-2 mt-4";
                     body.innerHTML = `
-                        You have not updated the daily inputs for <b>TODAY</b> yet.<br><br>
-                        Please enter BUO, MOD, Timpla, & Tira and click <b>"Update Record"</b> first.
+                        <div class="text-gray-600 mb-4">You cannot submit the report yet.</div>
+                        <div class="bg-red-50 text-red-800 text-sm p-3 rounded-lg border border-red-100 font-medium">
+                            The "Daily Inputs" (BUO, Timpla, Tira) have not been updated for <b>TODAY</b>.
+                        </div>
                     `;
-                    confirmBtn.classList.add('hidden'); // Hide submit button
-                    modal.querySelector('button:first-child').textContent = "Close";
+                    confirmBtn.classList.add('hidden'); // Hide "Yes"
+                    cancelBtn.textContent = "Close";
+                    cancelBtn.className = "w-full py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition-colors";
                 } 
-                // STATE B: WARNING (Report exists -> Overwrite)
+                // --- STATE B: WARNING (Report exists -> Overwrite) ---
                 else if (status.reportAlreadySubmitted) {
-                    headerBg.className = "bg-orange-500 p-4 flex justify-center";
+                    headerClass = "bg-orange-500 p-6 flex justify-center items-center";
                     iconName = 'alert-triangle';
                     
-                    title.textContent = "Report Already Exists";
-                    title.className = "text-xl font-bold text-orange-600 mb-2";
+                    title.textContent = "Overwrite Existing Report?";
+                    title.className = "text-xl font-bold text-orange-700 mb-2 mt-4";
                     body.innerHTML = `
-                        A report for today has already been submitted.<br><br>
-                        Do you want to <b>OVERWRITE</b> the previous submission with this new data?
+                        <div class="text-gray-600 mb-4">A report for <b>today</b> has already been archived.</div>
+                        <div class="bg-orange-50 text-orange-800 text-sm p-3 rounded-lg border border-orange-100 text-left">
+                            <ul class="list-disc pl-4 space-y-1">
+                                <li>The previous record will be deleted.</li>
+                                <li>New data will replace the old entry.</li>
+                            </ul>
+                        </div>
                     `;
                     confirmBtn.classList.remove('hidden');
-                    confirmBtn.className = "px-5 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg transition-colors flex items-center";
                     confirmBtn.textContent = "Yes, Overwrite";
-                    modal.querySelector('button:first-child').textContent = "Cancel";
+                    confirmBtn.className = "flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-md transition-colors ml-2";
+                    cancelBtn.textContent = "Cancel";
+                    cancelBtn.className = "flex-1 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition-colors mr-2";
                 } 
-                // STATE C: NORMAL (Submit)
+                // --- STATE C: NORMAL (Standard Submit) ---
                 else {
-                    headerBg.className = "bg-green-600 p-4 flex justify-center";
-                    iconName = 'send';
+                    headerClass = "bg-blue-600 p-6 flex justify-center items-center";
+                    iconName = 'send'; // Standard clean send icon
                     
-                    title.textContent = "Submit Final Report?";
-                    title.className = "text-xl font-bold text-gray-900 mb-2";
+                    title.textContent = "Submit Daily Report";
+                    title.className = "text-xl font-bold text-gray-900 mb-2 mt-4";
                     body.innerHTML = `
-                        This will archive all sales, expenses, and inventory data for the day.<br><br>
-                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Inputs Verified</span>
+                        <p class="text-gray-500 mb-4">Are you sure you want to close the day?</p>
+                        <div class="flex items-center justify-center space-x-4 text-sm bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            <span class="flex items-center text-blue-700 font-bold"><i data-lucide="check" class="w-4 h-4 mr-1"></i> Inputs Verified</span>
+                            <span class="flex items-center text-blue-700 font-bold"><i data-lucide="check" class="w-4 h-4 mr-1"></i> Sales Synced</span>
+                        </div>
                     `;
                     confirmBtn.classList.remove('hidden');
-                    confirmBtn.className = "px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg transition-colors flex items-center";
-                    confirmBtn.textContent = "Yes, Submit";
-                    modal.querySelector('button:first-child').textContent = "Cancel";
+                    confirmBtn.textContent = "Confirm Submit";
+                    confirmBtn.className = "flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md transition-colors ml-2";
+                    cancelBtn.textContent = "Cancel";
+                    cancelBtn.className = "flex-1 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition-colors mr-2";
                 }
 
-                // 3. RENDER ICON SAFELY
-                // We wipe the container and re-add the <i> tag to ensure Lucide picks it up correctly
-                iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-8 h-8 text-white"></i>`;
-                lucide.createIcons(); // Transform <i> to <svg>
+                // Apply Styles
+                headerBg.className = headerClass;
+                iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-10 h-10 text-white"></i>`;
+                lucide.createIcons();
                 
-                // 4. SHOW MODAL
+                // Show Modal
                 modal.classList.remove('hidden');
             };
 
             // 5. EXECUTE SUBMIT (Reverted to Fullname)
             window.executeSubmitReport = () => {
-                document.getElementById('confirm-submit-modal').classList.add('hidden');
+                const modal = document.getElementById('confirm-submit-modal');
+                const btn = modal.querySelector('button:last-child');
+                const origText = btn.textContent;
                 
+                // 1. Loading State
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto"></i>`;
+                lucide.createIcons();
+
                 if (!window.currentReportData) return;
                 const d = window.currentReportData;
                 
-                // BACK TO FULL NAME
+                // Get submitter name safely
                 const submitterName = sessionStorage.getItem('takos_fullname') || "User";
 
-                triggerNotification('Submitting...', 'Archiving daily report...', 'info');
-
+                // 2. Send Data
                 sendData('SUBMIT_FULL_REPORT', { 
                     buo: d.financial.calculations.buo,
                     sales: d.financial.transactions.totalSales,
@@ -1868,11 +1888,37 @@
                     wastage: d.inventory.batter.ratio,
                     submitter: submitterName 
                 }).then(res => {
+                    modal.classList.add('hidden'); // Hide confirm modal
+                    btn.disabled = false;
+                    btn.textContent = origText;
+
                     if(res.success) {
-                        triggerNotification('Report Saved', 'Daily report archived to database.', 'success');
+                        // 3. SHOW SUCCESS CONFIRMATION MODAL
+                        showModal(
+                            'Report Saved!', 
+                            `<div class="flex flex-col items-center">
+                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                                    <i data-lucide="check" class="w-8 h-8 text-green-600"></i>
+                                </div>
+                                <p class="text-gray-600 text-center">${res.message}</p>
+                                <p class="text-xs text-gray-400 mt-2">Data archived to database.</p>
+                             </div>`, 
+                            'Done', 
+                            () => {
+                                hideModal();
+                                // Refresh to update "Already Submitted" status
+                                loadReportData(); 
+                            }, 
+                            true // Hide cancel button
+                        );
+                        lucide.createIcons();
                     } else {
                         triggerNotification('Save Failed', res.message, 'error');
                     }
+                }).catch(err => {
+                    btn.disabled = false;
+                    btn.textContent = origText;
+                    triggerNotification('Error', err.message, 'error');
                 });
             };
 
@@ -2473,4 +2519,5 @@
 </body>
 
 </html>
+
 
